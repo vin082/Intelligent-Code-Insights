@@ -1,0 +1,31 @@
+"""
+State models for the LangGraph workflow
+"""
+
+from typing import TypedDict, List, Dict
+
+
+class GraphState(TypedDict):
+    """State schema for the RAG workflow graph"""
+
+    # Query-related fields
+    question: str
+    query_needs_improvement: bool
+    rewritten_query: str
+
+    # Retrieval-related fields
+    retrieved_code: List[str]
+    code_files: List[str]
+
+    # Grading-related fields
+    grading_scores: List[Dict[str, str]]
+    any_relevant: bool
+
+    # Generation-related fields
+    generation: str
+    answer_quality_good: bool
+    final_answer: str
+
+    # Process tracking
+    intermediate_steps: List[str]
+    retry_count: int

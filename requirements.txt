@@ -1,0 +1,37 @@
+# Core dependencies
+streamlit
+python-dotenv
+blinker
+
+# LangChain - minimal install to avoid pyarrow
+langchain
+langchain-core
+langchain-openai
+
+# LangChain Community - install separately with no deps first
+langchain-community
+langchain-text-splitters
+
+# LangGraph
+langgraph
+
+# Vector store
+faiss-cpu
+
+# OpenAI
+openai
+
+# Utilities
+tiktoken
+
+# Required by langchain
+pydantic
+SQLAlchemy
+requests
+PyYAML
+numpy
+tenacity
+aiohttp
+dataclasses-json
+jsonpatch
+langsmith
