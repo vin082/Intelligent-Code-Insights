@@ -26,6 +26,9 @@ class GraphState(TypedDict):
     answer_quality_good: bool
     final_answer: str
 
+    # Evaluation-related fields
+    evaluation_results: Dict
+
     # Process tracking
     intermediate_steps: List[str]
     retry_count: int

@@ -33,6 +33,7 @@ def build_workflow(llm, retriever):
     workflow.add_node("rewrite_query", nodes.rewrite_query_node)
     workflow.add_node("generate", nodes.generate_node)
     workflow.add_node("self_reflection", nodes.self_reflection_node)
+    workflow.add_node("evaluation", nodes.evaluation_node)
     workflow.add_node("finalize", nodes.finalize_node)
 
     # Set entry point - start with quality check
@@ -55,8 +56,9 @@ def build_workflow(llm, retriever):
     workflow.add_conditional_edges(
         "self_reflection",
         route_after_reflection,
-        {"rewrite_query": "rewrite_query", "finalize": "finalize"}
+        {"rewrite_query": "rewrite_query", "evaluation": "evaluation"}
     )
+    workflow.add_edge("evaluation", "finalize")
     workflow.add_edge("finalize", END)
 
     return workflow.compile()

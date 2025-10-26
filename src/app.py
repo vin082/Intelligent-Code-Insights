@@ -6,9 +6,10 @@ Main entry point for the application
 import os
 import streamlit as st
 
-from config.settings import APP_TITLE, APP_ICON, LAYOUT, INITIAL_SIDEBAR_STATE, DEFAULT_JAVA_PATH
+from config.settings import APP_TITLE, APP_ICON, LAYOUT, INITIAL_SIDEBAR_STATE, DEFAULT_JAVA_PATH, LANGSMITH_ENABLED
 from ui import CUSTOM_CSS, FOOTER_HTML, render_sidebar, render_message, render_process_path
 from core import initialize_system
+from evaluations.display import display_evaluation_results
 
 
 # Page configuration
@@ -152,6 +153,10 @@ def main():
                                 if i < len(codes) - 1:
                                     st.divider()
 
+                    # Show evaluation results if available
+                    if LANGSMITH_ENABLED and result.get("evaluation_results"):
+                        display_evaluation_results(result.get("evaluation_results"))
+
                     # Save to session
                     message_data = {
                         "role": "assistant",
@@ -159,7 +164,8 @@ def main():
                         "intermediate_steps": result.get("intermediate_steps", []),
                         "code_files": result.get("code_files", []),
                         "retrieved_code": result.get("retrieved_code", []),
-                        "scores": [s["score"] for s in result.get("grading_scores", [])]
+                        "scores": [s["score"] for s in result.get("grading_scores", [])],
+                        "evaluation_results": result.get("evaluation_results", {})
                     }
                     st.session_state.messages.append(message_data)
 

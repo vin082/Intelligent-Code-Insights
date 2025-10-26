@@ -84,6 +84,9 @@ def render_message(message: dict, show_intermediate: bool, show_files: bool, sho
         show_files: Whether to show file references
         show_code: Whether to show code snippets
     """
+    from config.settings import LANGSMITH_ENABLED
+    from evaluations.display import display_evaluation_results
+
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
@@ -107,6 +110,10 @@ def render_message(message: dict, show_intermediate: bool, show_files: bool, sho
                     st.markdown(f"**Relevance:** {score}")
                     st.code(code[:500] + ("..." if len(code) > 500 else ""), language="java")
                     st.divider()
+
+        # Show evaluation results if available
+        if LANGSMITH_ENABLED and message.get("evaluation_results"):
+            display_evaluation_results(message["evaluation_results"])
 
 
 def render_process_path(result: dict) -> str:

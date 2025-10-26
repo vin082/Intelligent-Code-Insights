@@ -26,8 +26,8 @@ def route_after_grading(state: GraphState) -> str:
 def route_after_reflection(state: GraphState) -> str:
     """Route after self-reflection"""
     if state.get("answer_quality_good", False):
-        return "finalize"
+        return "evaluation"
     elif state.get("retry_count", 0) < 2:
         return "rewrite_query"
     else:
-        return "finalize"
+        return "evaluation"

@@ -243,6 +243,60 @@ Respond: yes or no"""
         ]
         return state
 
+    def evaluation_node(self, state: GraphState) -> GraphState:
+        """
+        Evaluate the generated answer using custom evaluators.
+        Only runs if LangSmith is enabled.
+        """
+        from config.settings import LANGSMITH_ENABLED
+
+        # Skip evaluation if LangSmith not enabled
+        if not LANGSMITH_ENABLED:
+            return state
+
+        try:
+            from evaluations.evaluators import run_all_evaluations
+
+            question = state["question"]
+            answer = state["generation"]
+            retrieved_docs = state.get("retrieved_code", [])
+
+            # Build context string from retrieved docs
+            if retrieved_docs:
+                context_parts = []
+                for i, doc in enumerate(retrieved_docs, 1):
+                    file_path = doc.metadata.get('source', 'unknown')
+                    content = doc.page_content
+                    context_parts.append(f"File: {file_path}\n{content}")
+                context = "\n\n---\n\n".join(context_parts)
+            else:
+                context = "No context retrieved"
+
+            # Run all evaluations
+            eval_results = run_all_evaluations(
+                question=question,
+                answer=answer,
+                context=context,
+                retrieved_documents=retrieved_docs
+            )
+
+            # Store evaluation results in state
+            state["evaluation_results"] = eval_results
+
+            # Add evaluation summary to intermediate steps
+            summary = eval_results.get('overall', {}).get('summary', 'Evaluation completed')
+            state["intermediate_steps"] = state.get("intermediate_steps", []) + [
+                f"📊 Evaluation:\n{summary}"
+            ]
+
+        except Exception as e:
+            # Don't fail the workflow if evaluation fails
+            state["intermediate_steps"] = state.get("intermediate_steps", []) + [
+                f"⚠️ Evaluation skipped: {str(e)}"
+            ]
+
+        return state
+
     def finalize_node(self, state: GraphState) -> GraphState:
         """Finalize the answer"""
         state["final_answer"] = state["generation"]
