@@ -287,51 +287,97 @@ Respond: yes or no"""
 
             # Send evaluation scores to LangSmith as feedback
             try:
-                # Get current run context
-                run_tree = get_current_run_tree()
-                if run_tree and run_tree.trace_id:
-                    client = Client()
+                from langsmith import Client
+                import langsmith
 
+                client = Client()
+
+                # Get the current run context - try multiple methods
+                run_id = None
+
+                # Method 1: Check langsmith context
+                try:
+                    current_run = langsmith.get_current_run_tree()
+                    if current_run:
+                        run_id = str(current_run.id)
+                        state["intermediate_steps"] = state.get("intermediate_steps", []) + [
+                            f"🔍 Found run ID via run_tree: {run_id[:8]}..."
+                        ]
+                except Exception as e:
+                    state["intermediate_steps"] = state.get("intermediate_steps", []) + [
+                        f"⚠️ Method 1 failed: {str(e)}"
+                    ]
+
+                # Method 2: Try to get from project runs (last run)
+                if not run_id:
+                    try:
+                        from config.settings import LANGSMITH_PROJECT
+                        recent_runs = list(client.list_runs(
+                            project_name=LANGSMITH_PROJECT,
+                            limit=1
+                        ))
+                        if recent_runs:
+                            run_id = str(recent_runs[0].id)
+                            state["intermediate_steps"] = state.get("intermediate_steps", []) + [
+                                f"🔍 Using most recent run ID: {run_id[:8]}..."
+                            ]
+                    except Exception as e:
+                        state["intermediate_steps"] = state.get("intermediate_steps", []) + [
+                            f"⚠️ Method 2 failed: {str(e)}"
+                        ]
+
+                if run_id:
                     # Send each metric as feedback
+                    feedback_count = 0
+
                     accuracy = eval_results.get('accuracy', {})
                     if accuracy.get('score') is not None:
                         client.create_feedback(
-                            run_id=run_tree.trace_id,
+                            run_id=run_id,
                             key="accuracy",
                             score=accuracy.get('score'),
                             comment=accuracy.get('reasoning', '')
                         )
+                        feedback_count += 1
 
                     groundedness = eval_results.get('groundedness', {})
                     if groundedness.get('score') is not None:
                         client.create_feedback(
-                            run_id=run_tree.trace_id,
+                            run_id=run_id,
                             key="groundedness",
                             score=groundedness.get('score'),
                             comment=f"Hallucinations: {groundedness.get('hallucinations', 'None')}"
                         )
+                        feedback_count += 1
 
                     relevancy = eval_results.get('relevancy', {})
                     if relevancy.get('score') is not None:
                         client.create_feedback(
-                            run_id=run_tree.trace_id,
+                            run_id=run_id,
                             key="retrieval_relevancy",
                             score=relevancy.get('score'),
                             comment=f"{relevancy.get('relevant_count', 0)}/{relevancy.get('total_count', 0)} chunks relevant"
                         )
+                        feedback_count += 1
 
                     precision = eval_results.get('precision', {})
                     if precision.get('score') is not None:
                         client.create_feedback(
-                            run_id=run_tree.trace_id,
+                            run_id=run_id,
                             key="context_precision",
                             score=precision.get('score'),
                             comment=precision.get('reasoning', '')
                         )
+                        feedback_count += 1
 
                     state["intermediate_steps"] = state.get("intermediate_steps", []) + [
-                        "📊 Evaluation: Sent to LangSmith"
+                        f"✅ Sent {feedback_count} evaluations to LangSmith"
                     ]
+                else:
+                    state["intermediate_steps"] = state.get("intermediate_steps", []) + [
+                        "⚠️ Could not find run ID - feedback not sent"
+                    ]
+
             except Exception as feedback_error:
                 # Log but don't fail if feedback fails
                 state["intermediate_steps"] = state.get("intermediate_steps", []) + [
