@@ -104,6 +104,7 @@ def main():
                         "query_needs_improvement": False,
                         "retrieved_code": [],
                         "code_files": [],
+                        "retrieved_documents": [],
                         "grading_scores": [],
                         "any_relevant": False,
                         "rewritten_query": "",

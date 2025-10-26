@@ -92,6 +92,7 @@ Answer only: yes or no"""
 
         state["retrieved_code"] = [doc.page_content for doc in filtered_docs]
         state["code_files"] = [doc.metadata.get("source", "Unknown") for doc in filtered_docs]
+        state["retrieved_documents"] = filtered_docs  # Store full Document objects for evaluators
 
         return state
 
@@ -261,7 +262,9 @@ Respond: yes or no"""
 
             question = state["question"]
             answer = state["generation"]
-            retrieved_docs = state.get("retrieved_code", [])
+            retrieved_docs = state.get("retrieved_documents", [])  # Full Document objects
+            retrieved_code = state.get("retrieved_code", [])  # Just the strings
+            code_files = state.get("code_files", [])
 
             # Build context string from retrieved docs
             if retrieved_docs:
@@ -271,6 +274,12 @@ Respond: yes or no"""
                     content = doc.page_content
                     context_parts.append(f"File: {file_path}\n{content}")
                 context = "\n\n---\n\n".join(context_parts)
+            elif retrieved_code and code_files:
+                # Fallback: build context from strings if Document objects not available
+                context_parts = []
+                for code, filepath in zip(retrieved_code, code_files):
+                    context_parts.append(f"File: {filepath}\n{code}")
+                context = "\n\n---\n\n".join(context_parts)
             else:
                 context = "No context retrieved"
 
@@ -279,7 +288,7 @@ Respond: yes or no"""
                 question=question,
                 answer=answer,
                 context=context,
-                retrieved_documents=retrieved_docs
+                retrieved_documents=retrieved_docs if retrieved_docs else []
             )
 
             # Store evaluation results in state

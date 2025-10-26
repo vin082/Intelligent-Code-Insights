@@ -16,6 +16,7 @@ class GraphState(TypedDict):
     # Retrieval-related fields
     retrieved_code: List[str]
     code_files: List[str]
+    retrieved_documents: List  # Full Document objects for evaluators
 
     # Grading-related fields
     grading_scores: List[Dict[str, str]]
