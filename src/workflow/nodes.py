@@ -256,6 +256,8 @@ Respond: yes or no"""
 
         try:
             from evaluations.evaluators import run_all_evaluations
+            from langsmith import Client
+            from langsmith.run_helpers import get_current_run_tree
 
             question = state["question"]
             answer = state["generation"]
@@ -282,6 +284,59 @@ Respond: yes or no"""
 
             # Store evaluation results in state
             state["evaluation_results"] = eval_results
+
+            # Send evaluation scores to LangSmith as feedback
+            try:
+                # Get current run context
+                run_tree = get_current_run_tree()
+                if run_tree and run_tree.trace_id:
+                    client = Client()
+
+                    # Send each metric as feedback
+                    accuracy = eval_results.get('accuracy', {})
+                    if accuracy.get('score') is not None:
+                        client.create_feedback(
+                            run_id=run_tree.trace_id,
+                            key="accuracy",
+                            score=accuracy.get('score'),
+                            comment=accuracy.get('reasoning', '')
+                        )
+
+                    groundedness = eval_results.get('groundedness', {})
+                    if groundedness.get('score') is not None:
+                        client.create_feedback(
+                            run_id=run_tree.trace_id,
+                            key="groundedness",
+                            score=groundedness.get('score'),
+                            comment=f"Hallucinations: {groundedness.get('hallucinations', 'None')}"
+                        )
+
+                    relevancy = eval_results.get('relevancy', {})
+                    if relevancy.get('score') is not None:
+                        client.create_feedback(
+                            run_id=run_tree.trace_id,
+                            key="retrieval_relevancy",
+                            score=relevancy.get('score'),
+                            comment=f"{relevancy.get('relevant_count', 0)}/{relevancy.get('total_count', 0)} chunks relevant"
+                        )
+
+                    precision = eval_results.get('precision', {})
+                    if precision.get('score') is not None:
+                        client.create_feedback(
+                            run_id=run_tree.trace_id,
+                            key="context_precision",
+                            score=precision.get('score'),
+                            comment=precision.get('reasoning', '')
+                        )
+
+                    state["intermediate_steps"] = state.get("intermediate_steps", []) + [
+                        "📊 Evaluation: Sent to LangSmith"
+                    ]
+            except Exception as feedback_error:
+                # Log but don't fail if feedback fails
+                state["intermediate_steps"] = state.get("intermediate_steps", []) + [
+                    f"⚠️ LangSmith feedback failed: {str(feedback_error)}"
+                ]
 
             # Add evaluation summary to intermediate steps
             summary = eval_results.get('overall', {}).get('summary', 'Evaluation completed')
