@@ -49,3 +49,10 @@ RELATIONSHIP_KEYWORDS = ['calls', 'uses', 'depends', 'extends', 'implements', 'i
 # UI Settings
 LAYOUT = "wide"
 INITIAL_SIDEBAR_STATE = "expanded"
+
+# LangSmith Configuration (Observability & Evaluation)
+LANGSMITH_ENABLED = os.getenv("LANGCHAIN_TRACING_V2", "false").lower() == "true"
+LANGSMITH_API_KEY = os.getenv("LANGCHAIN_API_KEY")
+LANGSMITH_PROJECT = os.getenv("LANGCHAIN_PROJECT", "IntelligentCodeInsights")
+LANGSMITH_ENDPOINT = os.getenv("LANGCHAIN_ENDPOINT", "https://api.smith.langchain.com")
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")

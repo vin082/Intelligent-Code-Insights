@@ -60,6 +60,17 @@ def render_sidebar(java_path: str, files_loaded: int):
 
         clear_requested = st.button("🗑️ Clear Chat History", use_container_width=True)
 
+        # LangSmith Status
+        st.divider()
+        st.header("📊 Observability")
+        try:
+            from utils.langsmith_helper import display_langsmith_info
+            langsmith_info = display_langsmith_info()
+            st.markdown(langsmith_info)
+        except Exception:
+            # If LangSmith not configured, skip silently
+            pass
+
     return java_path_input, show_intermediate, show_code, show_files, reload_requested, clear_requested
 
 
