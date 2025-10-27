@@ -1,0 +1,98 @@
+{
+  "metadata": {
+    "name": "Intelligent Code Insights - Mini Evaluation Dataset",
+    "version": "1.0",
+    "created": "2025-01-27",
+    "description": "5 test cases for quick validation of RAG system quality",
+    "total_cases": 5
+  },
+  "test_cases": [
+    {
+      "id": 1,
+      "query": "OrderService",
+      "category": "structural",
+      "difficulty": "easy",
+      "expected_behavior": {
+        "should_find_files": ["OrderService.java"],
+        "should_mention_classes": ["OrderService"],
+        "should_not_hallucinate": true,
+        "expected_accuracy_min": 0.8,
+        "expected_groundedness_min": 0.8
+      },
+      "reference_answer": "Should locate OrderService class and describe its primary responsibilities for managing orders.",
+      "notes": "Simple class lookup - tests basic retrieval"
+    },
+    {
+      "id": 2,
+      "query": "PaymentService.processPayment",
+      "category": "structural",
+      "difficulty": "medium",
+      "expected_behavior": {
+        "should_find_files": ["PaymentService.java"],
+        "should_mention_methods": ["processPayment"],
+        "should_mention_classes": ["PaymentService"],
+        "should_not_hallucinate": true,
+        "expected_accuracy_min": 0.7,
+        "expected_groundedness_min": 0.8
+      },
+      "reference_answer": "Should locate the processPayment method in PaymentService and explain its implementation including parameters, return type, and logic.",
+      "notes": "Method-specific query - tests precise retrieval"
+    },
+    {
+      "id": 3,
+      "query": "How does order processing work?",
+      "category": "semantic",
+      "difficulty": "medium",
+      "expected_behavior": {
+        "should_find_files": ["OrderService.java"],
+        "should_mention_classes": ["OrderService", "Order"],
+        "should_explain_workflow": true,
+        "should_not_hallucinate": true,
+        "expected_accuracy_min": 0.7,
+        "expected_groundedness_min": 0.75
+      },
+      "reference_answer": "Should explain the order lifecycle including creation, validation, payment processing, fulfillment, and completion stages.",
+      "notes": "Semantic query - tests understanding and explanation"
+    },
+    {
+      "id": 4,
+      "query": "How is authentication implemented?",
+      "category": "semantic",
+      "difficulty": "hard",
+      "expected_behavior": {
+        "should_find_related_code": true,
+        "might_not_exist": true,
+        "should_not_hallucinate": true,
+        "expected_accuracy_min": 0.6,
+        "expected_groundedness_min": 0.8
+      },
+      "reference_answer": "Should search for authentication-related code. If not present in the codebase, should honestly state that rather than inventing implementation details.",
+      "notes": "Cross-cutting concern - may not have dedicated auth code, tests honesty"
+    },
+    {
+      "id": 5,
+      "query": "OAuth2 integration",
+      "category": "edge_case",
+      "difficulty": "hard",
+      "expected_behavior": {
+        "likely_not_in_codebase": true,
+        "should_not_hallucinate": true,
+        "should_admit_if_not_found": true,
+        "expected_accuracy_min": 0.5,
+        "expected_groundedness_min": 0.9
+      },
+      "reference_answer": "Should search for OAuth2-related code. If not found, should clearly state that OAuth2 is not implemented in the codebase rather than fabricating implementation details.",
+      "notes": "Edge case - likely doesn't exist, critical test for hallucination detection"
+    }
+  ],
+  "evaluation_criteria": {
+    "pass_thresholds": {
+      "accuracy": 0.6,
+      "groundedness": 0.8,
+      "retrieval_relevancy": 0.6,
+      "context_precision": 0.6
+    },
+    "overall_pass_rate_target": 0.8,
+    "notes": "A test case passes if it meets all 4 metric thresholds"
+  }
+}
